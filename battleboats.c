@@ -42,6 +42,8 @@ TASK_2:
 #define MAX_BOATS 5
 #define STD_ERR "Invalid option!"
 #define MAX_CHARS 3
+#define ICON_HIT 'X'
+#define ICON_MISS '~'
 
 // function prototypes
 void clrscr(int i);
@@ -60,7 +62,7 @@ void player_attack(int board_size);
 const char TEST_BOARD[BOARD_SIZE_MAX][BOARD_SIZE_MAX] = {
     {'O', '~', 'O'},
     {'~', 'X', '~'},
-    {'O', 'X', 'X'}
+    {'O', 'X', 'O'}
 };
 
 // global variables
@@ -133,30 +135,62 @@ int main(void)
 void player_attack(int board_size)
 {
     char pos_temp[MAX_CHARS]; // [x] [y] [\0]
+    static int hit_counter = 0;
+    static int player_tries = 0;
+
+    if (hit_counter >= MAX_BOATS)
+    {
+        printf("Debug Temporary Message: YOU ARE THE WINNER!!\n");
+        exit(0);
+    }
+
     while (1)
     {
         // ✅ input coords
         printf("Enter coordinates to attack (e.g: A2): ");
         scanf("%2s", pos_temp);
 
+        printf("DEBUG: PLAYER_TRIES: %i", player_tries);
         // ✅ check if valid
         if (pos_temp[0] >= 'a' && pos_temp[0] <= 'z') {pos_temp[0] -= 32;}
         if ((pos_temp[0] >= 'A' && pos_temp[0] <= (board_size + 'A' - 1)) &&
         (pos_temp[1] >= '1' && pos_temp[1] <= (board_size + '0')) &&
         (pos_temp[2] == '\0'))
         {
-            break;
+            // convert to int
+            int board_row = pos_temp[0] - 'A';
+            int board_collum = pos_temp[1] - '1';
+
+            // check to see if area used
+            if (board[board_row][board_collum] == ICON_HIT || board[board_row][board_collum] == ICON_MISS)
+            {
+                printf("DEBUG: You are attacking the same position twice!\n");
+            }
+            else
+            {
+                hit_counter++;
+            }
+            int hit = check_hit(pos_temp);
+            board[board_row][board_collum] = (hit) ? ICON_HIT : ICON_MISS;
         }
         else
         {
             printf("ERROR: Invalid Coordinate, please re-enter!\n");
         }
+        break;
     }
+}
 
-    int hit = check_hit(pos_temp);
-    int board_row = pos_temp[0] - 'A';
-    int board_collum = pos_temp[1] - '1';
-    board[board_row][board_collum] = (hit) ? 'X' : '~';
+int check_hit(char *pos_temp)
+{
+    for (int i = 0; i < MAX_BOATS; i++)
+    {
+        if (strcmp(comp_final[i], pos_temp) == 0)
+        {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 void computer_coordinates(int board_size)
@@ -190,18 +224,6 @@ void computer_coordinates(int board_size)
         }
         strcpy(comp_final[l], pos_temp);
     }
-}
-
-int check_hit(char *pos_temp)
-{
-    for (int i = 0; i < MAX_BOATS; i++)
-    {
-        if (strcmp(comp_final[i], pos_temp) == 0)
-        {
-            return 1;
-        }
-    }
-    return 0;
 }
 
 int input_option(char* message)
