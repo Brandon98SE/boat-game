@@ -144,7 +144,7 @@ void player_attack(int board_size)
         exit(0);
     }
 
-    while (1)
+    while (1) // (testing git commit)
     {
         // ✅ input coords
         printf("Enter coordinates to attack (e.g: A2): ");
