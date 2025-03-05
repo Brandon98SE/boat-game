@@ -37,7 +37,7 @@ TASK_2:
 #include <time.h>
 
 // global macros
-#define BOARD_SIZE_MAX 26
+#define BOARD_SIZE_MAX 9
 #define ERROR_LINES 100
 #define MAX_BOATS 5
 #define STD_ERR "Invalid option!"
@@ -87,7 +87,7 @@ int main(void)
         {
             // choose board size
             clrscr(ERROR_LINES);
-            int board_size = input_int("--- NEW GAME ---\nSize of board (3 to 26): ", "ERROR: Invalid Option.\n", 0, ERROR_LINES, 100, 3, 26);
+            int board_size = input_int("--- NEW GAME ---\nSize of board (3 to 9): ", "ERROR: Invalid Option.\n", 0, ERROR_LINES, 100, 3, 9);
 
             // RENDER PLAYER BOARD FOR DEBUG
             reset_board(board_size);
@@ -95,7 +95,7 @@ int main(void)
             input_coordinates(board_size);
             for (int i = 0; (i < MAX_BOATS); i++)
             {
-                board[(int) pos_final[i][0] - 'A'][(int) pos_final[i][1] - '1'] = '.';
+                board[(int) pos_final[i][0] - 'A'][(int) pos_final[i][1] - '1'] = 'U';
             }
             printf("DEBUG: PLAYER BOARD.\n");
             render_board(board_size); // only enabled for DEBUGGING!
@@ -105,13 +105,12 @@ int main(void)
             computer_coordinates(board_size);
             for (int i = 0; (i < MAX_BOATS); i++)
             {
-                board[(int) comp_final[i][0] - 'A'][(int) comp_final[i][1] - '1'] = '.';
+                board[(int) comp_final[i][0] - 'A'][(int) comp_final[i][1] - '1'] = 'C';
             }
             printf("DEBUG: COMPUTER BOARD.\n");
             render_board(board_size); // only enabled for DEBUGGING!
 
             // ATTACKING:
-            reset_board(board_size);
             for (int i = 0; i < 999; i++)
             {
                 player_attack(board_size);
@@ -136,61 +135,68 @@ void player_attack(int board_size)
 {
     char pos_temp[MAX_CHARS]; // [x] [y] [\0]
     static int hit_counter = 0;
-    static int player_tries = 0;
+    static int hit = 0;
 
-    if (hit_counter >= MAX_BOATS)
+    if (hit_counter == MAX_BOATS)
     {
-        printf("Debug Temporary Message: YOU ARE THE WINNER!!\n");
+        printf("VICTORY: YOU ARE THE WINNER!!\n");
         exit(0);
     }
 
-    while (1) // (testing git commit)
+    while (1) // for error handling
     {
-        // ✅ input coords
+        // input coords
         printf("Enter coordinates to attack (e.g: A2): ");
-        scanf("%2s", pos_temp);
+        scanf("%3s", pos_temp);
 
-        printf("DEBUG: PLAYER_TRIES: %i", player_tries);
-        // ✅ check if valid
+        // converting output to capital
         if (pos_temp[0] >= 'a' && pos_temp[0] <= 'z') {pos_temp[0] -= 32;}
+
+        // checking if valid
         if ((pos_temp[0] >= 'A' && pos_temp[0] <= (board_size + 'A' - 1)) &&
         (pos_temp[1] >= '1' && pos_temp[1] <= (board_size + '0')) &&
         (pos_temp[2] == '\0'))
         {
-            // convert to int
-            int board_row = pos_temp[0] - 'A';
-            int board_collum = pos_temp[1] - '1';
+            // convert to int from char
+            int x = pos_temp[0] - 'A';
+            int y = pos_temp[1] - '1';
 
-            // check to see if area used
-            if (board[board_row][board_collum] == ICON_HIT || board[board_row][board_collum] == ICON_MISS)
+            // check to see if area used 
+            if (board[x][y] == ICON_HIT || board[x][y] == ICON_MISS) // hit same part twice: "X" or "~"
             {
-                printf("DEBUG: You are attacking the same position twice!\n");
+                printf("You are attacking the same position twice!\n");
+                continue;
             }
-            else
+
+            // check if hit any enemy boats: 'U', 'C'
+            hit = 0;
+            for (int i = 0; i < MAX_BOATS; i++)
             {
-                hit_counter++;
+                if (strcmp(comp_final[i], pos_temp) == 0)
+                {
+                    printf("You hit the enemy boat\n");
+                    hit = 1;
+                    hit_counter++;
+                    break;
+                }
             }
-            int hit = check_hit(pos_temp);
-            board[board_row][board_collum] = (hit) ? ICON_HIT : ICON_MISS;
+
+            // if hit water
+            if (!hit)
+            {
+                printf("DEBUG: HIT WATER\n");
+                // nothing happens
+            }
+
+            // update the board.
+            board[x][y] = hit ? ICON_HIT : ICON_MISS;
+            break;
         }
         else
         {
             printf("ERROR: Invalid Coordinate, please re-enter!\n");
         }
-        break;
     }
-}
-
-int check_hit(char *pos_temp)
-{
-    for (int i = 0; i < MAX_BOATS; i++)
-    {
-        if (strcmp(comp_final[i], pos_temp) == 0)
-        {
-            return 1;
-        }
-    }
-    return 0;
 }
 
 void computer_coordinates(int board_size)
@@ -260,7 +266,7 @@ void input_coordinates(int board_size)
         {
             // ✅ input coords
             printf("Enter your boat coordinates (e.g: A2): ");
-            scanf("%2s", pos_temp);
+            scanf("%3s", pos_temp);
 
             // ✅ convert to upper
             if (pos_temp[0] >= 'a' && pos_temp[0] <= 'z')
