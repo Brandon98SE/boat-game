@@ -111,11 +111,7 @@ int main(void)
             render_board(board_size); // only enabled for DEBUGGING!
 
             // ATTACKING:
-            for (int i = 0; i < 999; i++)
-            {
-                player_attack(board_size);
-                render_board(board_size);
-            }
+            player_attack(board_size);
         }
         else if (menu_selection == 2 || menu_selection == 3) // Resume game
         {
@@ -137,64 +133,70 @@ void player_attack(int board_size)
     static int hit_counter = 0;
     static int hit = 0;
 
-    if (hit_counter == MAX_BOATS)
-    {
-        printf("VICTORY: YOU ARE THE WINNER!!\n");
-        exit(0);
-    }
-
     while (1) // for error handling
     {
-        // input coords
-        printf("Enter coordinates to attack (e.g: A2): ");
-        scanf("%3s", pos_temp);
-
-        // converting output to capital
-        if (pos_temp[0] >= 'a' && pos_temp[0] <= 'z') {pos_temp[0] -= 32;}
-
-        // checking if valid
-        if ((pos_temp[0] >= 'A' && pos_temp[0] <= (board_size + 'A' - 1)) &&
-        (pos_temp[1] >= '1' && pos_temp[1] <= (board_size + '0')) &&
-        (pos_temp[2] == '\0'))
+        if (hit_counter == MAX_BOATS)
         {
-            // convert to int from char
-            int x = pos_temp[0] - 'A';
-            int y = pos_temp[1] - '1';
-
-            // check to see if area used 
-            if (board[x][y] == ICON_HIT || board[x][y] == ICON_MISS) // hit same part twice: "X" or "~"
-            {
-                printf("You are attacking the same position twice!\n");
-                continue;
-            }
-
-            // check if hit any enemy boats: 'U', 'C'
-            hit = 0;
-            for (int i = 0; i < MAX_BOATS; i++)
-            {
-                if (strcmp(comp_final[i], pos_temp) == 0)
-                {
-                    printf("You hit the enemy boat\n");
-                    hit = 1;
-                    hit_counter++;
-                    break;
-                }
-            }
-
-            // if hit water
-            if (!hit)
-            {
-                printf("DEBUG: HIT WATER\n");
-                // nothing happens
-            }
-
-            // update the board.
-            board[x][y] = hit ? ICON_HIT : ICON_MISS;
-            break;
+            printf("VICTORY: YOU ARE THE WINNER!!\n");
+            exit(0);
         }
-        else
+        while (1)
         {
-            printf("ERROR: Invalid Coordinate, please re-enter!\n");
+            // input coords
+            printf("Enter coordinates to attack (e.g: A2): ");
+            scanf("%3s", pos_temp);
+
+            // converting output to capital
+            if (pos_temp[0] >= 'a' && pos_temp[0] <= 'z') {pos_temp[0] -= 32;}
+
+            // checking if valid
+            if ((pos_temp[0] >= 'A' && pos_temp[0] <= (board_size + 'A' - 1)) &&
+            (pos_temp[1] >= '1' && pos_temp[1] <= (board_size + '0')) &&
+            (pos_temp[2] == '\0'))
+            {
+                // convert to int from char
+                int x = pos_temp[0] - 'A';
+                int y = pos_temp[1] - '1';
+
+                // check to see if area used 
+                if (board[x][y] == ICON_HIT || board[x][y] == ICON_MISS) // hit same part twice: "X" or "~"
+                {
+                    board[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
+                    render_board(board_size);
+                    printf("You are attacking the same position twice!\n");
+                    continue;
+                }
+
+                // check if hit any enemy boats: 'U', 'C'
+                hit = 0;
+                for (int i = 0; i < MAX_BOATS; i++)
+                {
+                    if (strcmp(comp_final[i], pos_temp) == 0)
+                    {
+                        hit = 1;
+                        board[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
+                        hit_counter++;
+                        render_board(board_size);
+                        printf("You destroyed an enemy boat!\n");
+                        break;
+                    }
+                }
+
+                // if hit water
+                if (!hit)
+                {
+                    board[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
+                    render_board(board_size);
+                    printf("You hit the water!\n");
+                    // nothing happens
+                }
+
+                break;
+            }
+            else
+            {
+                printf("ERROR: Invalid Coordinate, please re-enter!\n");
+            }
         }
     }
 }
