@@ -1,33 +1,3 @@
-/*
-CHANGELOG (2025-02-11):
-    - Fixed user input error handling.
-    - Added text passthrough to input_int().
-    - Created Main Menu.
-    - next steps: Start on coding task_2.
-
-TASK_1:
-    output = {1. New Game, 2. Resume Game, 3. Instructions, 4. Quit}
-    input = answer()
-    output(PLayer 2 name: "{input}", Computer Name: {random_name})
-    input(name, comp)
-    END
-
-TASK_2:
-    - DONE: Display blank grid.
-    - ask coords from user
-    - check conflicting
-    - display boats on the grid
-    - made the grid - made column and rows.
-    - made menu system more robust
-    - better error handling.
-    - WATTTTER!!!
-    - made more modular
-    FOR TMR:
-        - Render boats on board.
-        - allow to choose where to render boat, w/ error handing
-        - tidy up code.
-*/
-
 // libraries
 #include <stdio.h>
 #include <string.h>
@@ -57,13 +27,6 @@ void computer_coordinates(int board_size);
 int input_option(char* message);
 int check_hit(char *pos_temp);
 void player_attack(int board_size);
-
-// global constants
-const char TEST_BOARD[BOARD_SIZE_MAX][BOARD_SIZE_MAX] = {
-    {'O', '~', 'O'},
-    {'~', 'X', '~'},
-    {'O', 'X', 'O'}
-};
 
 // global variables
 char board[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
