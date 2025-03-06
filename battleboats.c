@@ -91,12 +91,7 @@ int main(void)
 
             // RENDER PLAYER BOARD FOR DEBUG
             reset_board(board_size);
-            render_board(board_size); // ENABLED so the user can view the board to see valid locations
             input_coordinates(board_size);
-            for (int i = 0; (i < MAX_BOATS); i++)
-            {
-                board[(int) pos_final[i][0] - 'A'][(int) pos_final[i][1] - '1'] = 'U';
-            }
             printf("DEBUG: PLAYER BOARD.\n");
             render_board(board_size); // only enabled for DEBUGGING!
 
@@ -159,18 +154,18 @@ void player_attack(int board_size)
                 int y = pos_temp[1] - '1';
 
                 // check to see if area used 
-                if (board[x][y] == ICON_HIT || board[x][y] == ICON_MISS) // hit same part twice: "X" or "~"
+                if (board[x][y] == ICON_HIT || board[x][y] == ICON_MISS ) // hit same part twice: "X" or "~"
                 {
-                    board[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
+                    clrscr(100);
                     render_board(board_size);
                     printf("You are attacking the same position twice!\n");
                     continue;
                 }
 
                 // check if hit any enemy boats: 'U', 'C'
-                hit = 0;
                 for (int i = 0; i < MAX_BOATS; i++)
                 {
+                    clrscr(100);
                     if (strcmp(comp_final[i], pos_temp) == 0)
                     {
                         hit = 1;
@@ -185,11 +180,15 @@ void player_attack(int board_size)
                 // if hit water
                 if (!hit)
                 {
+                    clrscr(100);
                     board[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
                     render_board(board_size);
                     printf("You hit the water!\n");
                     // nothing happens
                 }
+
+                // reset hit
+                hit = 0;
 
                 break;
             }
@@ -266,6 +265,8 @@ void input_coordinates(int board_size)
         // coordinate checking
         while (1)
         {
+            clrscr(100);
+            render_board(board_size); // ENABLED so the user can view the board to see valid locations
             // ✅ input coords
             printf("Enter your boat coordinates (e.g: A2): ");
             scanf("%3s", pos_temp);
@@ -295,16 +296,23 @@ void input_coordinates(int board_size)
                 {
                     break;
                 }
+                clrscr(100);
                 printf("ERROR: Coordinate already used, please re-enter!\n");
             }
             else
             {
+                clrscr(100);
                 printf("ERROR: Invalid Coordinate, please re-enter!\n");
             }
         }
         // pos_final pos_temp as used_coordinates[MAX_BOATS] (5) = A2, A3, B5, A5, D3. compare them with input, if == INVALID.
         strcpy(pos_final[l], pos_temp);
+        for (int i = 0; (i <= l); i++)
+        {
+            board[(int) pos_final[i][0] - 'A'][(int) pos_final[i][1] - '1'] = 'U';
+        }
     }
+    clrscr(100);
 }
 
 void reset_board(int board_size)
