@@ -71,6 +71,8 @@ int main(void)
         {
             clrscr(ERROR_LINES);
             printf("--- %s ---\nThank you for playing!\n", VER);
+            printf("Press any key to exit.\n");
+            getchar();
             exit(0);
         }
         else if (menu_selection == 1) // New Game
@@ -238,6 +240,8 @@ void player_attack(int board_size)
     {
         splash_screen();
         printf("VICTORY: YOU ARE THE WINNER!!\n");
+        printf("Press any key to exit.\n");
+        getchar();
         exit(0);
     }
     printf("\n");
@@ -286,6 +290,8 @@ void computer_attack(int board_size)
                 {
                     splash_screen();
                     printf("DEFEAT: YOU HAVE LOST! >:C\n");
+                    printf("Press any key to exit.\n");
+                    getchar();
                     exit(0);
                 }
                 return;
