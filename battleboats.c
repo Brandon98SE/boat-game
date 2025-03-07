@@ -27,6 +27,7 @@ void computer_coordinates(int board_size);
 int input_option(char* message);
 int check_hit(char *pos_temp);
 void player_attack(int board_size);
+void instructions(void);
 
 // global variables
 char board[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
@@ -36,6 +37,7 @@ char comp_final[MAX_BOATS][MAX_CHARS];
 // main program
 int main(void)
 {
+    main_menu:
     clrscr(ERROR_LINES);
     int menu_selection;
     while (1)
@@ -71,16 +73,52 @@ int main(void)
             // ATTACKING:
             player_attack(board_size);
         }
-        else if (menu_selection == 2 || menu_selection == 3) // Resume game
+        else if (menu_selection == 2) // Resume game
         {
             clrscr(ERROR_LINES);
             printf("ERROR: This mode has not been implemented yet.\n\n");
+        }
+        else if (menu_selection == 3) // Instructions
+        {
+            instructions();
+            menu_selection = 0;
         }
         else // error handling
         {
             clrscr(ERROR_LINES);
             printf("ERROR: Impossible menu option selected - THIS IS A BUG.\n\n");
             exit(1);
+        }
+    }
+}
+
+void instructions(void)
+{
+    int submenu = 0;
+    int menu_option = 0;
+    while (1)
+    {
+        int menu_option = input_int("--- Instruction Categories ---\n\n1. How to play Battleboats\n2. How to win\n3. Controls\n0. RETURN TO MAIN MENU\n", "INVALID OPTION, please re-enter!\n", 100, 100, 100, 0, 3);
+        if (!menu_option)
+        {
+            break;
+        }
+        else if (menu_option == 1)
+        {
+            submenu = input_int("--- How to play Battleboats ---\n\nSelect 5 coordinates for your boats\nthen you take in turns to hit\nyour opponent's boats\nthen you win after killing all\n5 of their boats!\n\n0. Go back\n", STD_ERR, 100, 100, 100, 0, 0);
+        }
+        else if (menu_option == 2)
+        {
+            submenu = input_int("--- How to win ---\n\nSelect the boats that the\ncomputer has chosen, you\nhave to sink the computer's\nboats to win the game\nGood Luck! :D\n\n0. Go back\n", STD_ERR, 100, 100, 100, 0, 0);
+        }
+        else if (menu_option == 3)
+        {
+            submenu = input_int("--- Controls ---\n\nUse the letters and numbers\non your keyboard and press return\nto submit your choices.\n\n0. Go back\n", STD_ERR, 100, 100, 100, 0, 0);
+        }
+        else
+        {
+            printf("Invalid Option, program HALTED!\n");
+            exit(6);
         }
     }
 }
@@ -117,7 +155,7 @@ void player_attack(int board_size)
                 int y = pos_temp[1] - '1';
 
                 // check to see if area used 
-                if (board[x][y] == ICON_HIT || board[x][y] == ICON_MISS ) // hit same part twice: "X" or "~"
+                if (board[x][y] == ICON_HIT || board[x][y] == ICON_MISS) // hit same part twice: "X" or "~"
                 {
                     clrscr(100);
                     render_board(board_size);
