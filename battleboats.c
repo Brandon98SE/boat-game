@@ -7,6 +7,7 @@
 #include <time.h>
 
 // global macros
+#define VER "Battleboats v0.1.6-alpha"
 #define BOARD_SIZE_MAX 9
 #define ERROR_LINES 100
 #define MAX_BOATS 5
@@ -14,6 +15,14 @@
 #define MAX_CHARS 3
 #define ICON_HIT 'X'
 #define ICON_MISS '~'
+
+#ifdef _WIN32
+    #include <windows.h> // windows
+    #define SLEEP(ms) Sleep(ms) // sleep on windows is in ms.
+#else
+    #include <unistd.h> // linux/macos
+    #define SLEEP(ms) usleep((ms) * 1000) // sleep is in micro seconds.
+#endif
 
 // function prototypes
 void clrscr(int i);
@@ -28,6 +37,7 @@ int input_option(char* message);
 int check_hit(char *pos_temp);
 void player_attack(int board_size);
 void instructions(void);
+void splash_screen(void);
 
 // global variables
 char board[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
@@ -37,7 +47,7 @@ char comp_final[MAX_BOATS][MAX_CHARS];
 // main program
 int main(void)
 {
-    main_menu:
+    splash_screen();
     clrscr(ERROR_LINES);
     int menu_selection;
     while (1)
@@ -46,6 +56,7 @@ int main(void)
         if (menu_selection == 0) // quit game
         {
             clrscr(ERROR_LINES);
+            printf("--- %s ---\nThank you for playing!\n", VER);
             exit(0);
         }
         else if (menu_selection == 1) // New Game
@@ -90,6 +101,14 @@ int main(void)
             exit(1);
         }
     }
+}
+
+void splash_screen(void)
+{
+    clrscr(100);
+    printf("--- %s ---\n", VER);
+    fflush(stdout);
+    SLEEP(2000); // sleep for 2 seconds
 }
 
 void instructions(void)
