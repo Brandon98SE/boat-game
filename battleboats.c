@@ -15,6 +15,11 @@
 #define MAX_CHARS 3
 #define ICON_HIT 'X'
 #define ICON_MISS '~'
+#define CLRSCR 1
+#define BOARD_COMP_ATTACK 2
+#define BOARD_COMP 1
+#define BOARD_USER 0
+#define BOARD_USER_ATTACK 3
 
 #ifdef _WIN32
     #include <windows.h> // windows
@@ -26,10 +31,10 @@
 
 // function prototypes
 void clrscr(int i);
-void render_board(int board_size);
+void render_board(int board_size, int option);
 void main_menu(void);
 void new_game(int board_size);
-void reset_board(int board_size);
+void reset_board(int board_size, int option);
 int input_int(char *text, char *error, int clrscr_lines, int error_lines, int after_lines, int lower_bound, int upper_bound);
 void input_coordinates(int board_size);
 void computer_coordinates(int board_size);
@@ -38,16 +43,25 @@ int check_hit(char *pos_temp);
 void player_attack(int board_size);
 void instructions(void);
 void splash_screen(void);
+void computer_attack(int board_size);
 
 // global variables
-char board[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
+char board_user[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
+char board_comp[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
+char board_comp_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
+char board_user_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
 char pos_final[MAX_BOATS][MAX_CHARS];
 char comp_final[MAX_BOATS][MAX_CHARS];
+static int user_hit_counter = 0;
+static int comp_hit_counter = 0;
+
 
 // main program
 int main(void)
 {
+    srand(time(NULL)); // random seed.
     splash_screen();
+    SLEEP(1500);
     clrscr(ERROR_LINES);
     int menu_selection;
     while (1)
@@ -66,23 +80,35 @@ int main(void)
             int board_size = input_int("--- NEW GAME ---\nSize of board (3 to 9): ", "ERROR: Invalid Option.\n", 0, ERROR_LINES, 100, 3, 9);
 
             // RENDER PLAYER BOARD FOR DEBUG
-            reset_board(board_size);
+            reset_board(board_size, BOARD_USER);
             input_coordinates(board_size);
-            printf("DEBUG: PLAYER BOARD.\n");
-            render_board(board_size); // only enabled for DEBUGGING!
+            //printf("DEBUG: PLAYER BOARD.\n");
+            //render_board(board_size, BOARD_USER); // only enabled for DEBUGGING!
 
             // RENDER COMPUTER BOARD FOR DEBUG
-            reset_board(board_size);
+            reset_board(board_size, BOARD_COMP);
             computer_coordinates(board_size);
             for (int i = 0; (i < MAX_BOATS); i++)
             {
-                board[(int) comp_final[i][0] - 'A'][(int) comp_final[i][1] - '1'] = 'C';
+                board_comp[(int) comp_final[i][0] - 'A'][(int) comp_final[i][1] - '1'] = 'C';
             }
-            printf("DEBUG: COMPUTER BOARD.\n");
-            render_board(board_size); // only enabled for DEBUGGING!
+            //printf("DEBUG: COMPUTER BOARD.\n");
+            //render_board(board_size, BOARD_COMP); // only enabled for DEBUGGING!
 
             // ATTACKING:
-            player_attack(board_size);
+            reset_board(board_size, BOARD_COMP_ATTACK);
+            reset_board(board_size, BOARD_USER_ATTACK);
+            printf("The computer is choosing boat positions...\n");
+            SLEEP(1500);
+            clrscr(100);
+            printf("--- Player hit tracker ---\n");
+            render_board(board_size, BOARD_COMP_ATTACK);
+            while (comp_hit_counter < 5 || user_hit_counter < 5)
+            {
+                player_attack(board_size);
+                SLEEP(3000);
+                computer_attack(board_size);
+            }
         }
         else if (menu_selection == 2) // Resume game
         {
@@ -107,8 +133,7 @@ void splash_screen(void)
 {
     clrscr(100);
     printf("--- %s ---\n", VER);
-    fflush(stdout);
-    SLEEP(2000); // sleep for 2 seconds
+    //SLEEP(2000); // sleep for 2 seconds
 }
 
 void instructions(void)
@@ -145,85 +170,142 @@ void instructions(void)
 void player_attack(int board_size)
 {
     char pos_temp[MAX_CHARS]; // [x] [y] [\0]
-    static int hit_counter = 0;
     static int hit = 0;
-
-    while (1) // for error handling
+    while (1)
     {
-        if (hit_counter == MAX_BOATS)
+        // input coords
+        printf("Enter coordinates to attack (e.g: A2): ");
+        scanf("%3s", pos_temp);
+
+        // converting output to capital
+        if (pos_temp[0] >= 'a' && pos_temp[0] <= 'z') {pos_temp[0] -= 32;}
+
+        // checking if valid
+        if ((pos_temp[0] >= 'A' && pos_temp[0] <= (board_size + 'A' - 1)) &&
+        (pos_temp[1] >= '1' && pos_temp[1] <= (board_size + '0')) &&
+        (pos_temp[2] == '\0'))
         {
-            printf("VICTORY: YOU ARE THE WINNER!!\n");
-            exit(0);
+            // convert to int from char
+            int x = pos_temp[0] - 'A';
+            int y = pos_temp[1] - '1';
+
+            // check to see if area used 
+            if (board_comp_attack[x][y] == ICON_HIT || board_comp_attack[x][y] == ICON_MISS) // hit same part twice: "X" or "~"
+            {
+                clrscr(100);
+                printf("--- Player hit tracker ---\n");
+                render_board(board_size, BOARD_COMP_ATTACK);
+                printf("You are attacking the same position twice at %s!\n", pos_temp);
+                continue;
+            }
+
+            // check if hit any enemy boats: 'U', 'C'
+            hit = 0;
+            for (int i = 0; i < MAX_BOATS; i++)
+            {
+                clrscr(100);
+                printf("--- Player hit tracker ---\n");
+                if (strcmp(comp_final[i], pos_temp) == 0)
+                {
+                    hit = 1;
+                    board_comp_attack[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
+                    user_hit_counter++;
+                    render_board(board_size, BOARD_COMP_ATTACK);
+                    printf("You destroyed an enemy boat at %s!\n", pos_temp);
+                    break;
+                }
+            }
+
+            // if hit water
+            if (!hit)
+            {
+                clrscr(100);
+                printf("--- Player hit tracker ---\n");
+                board_comp_attack[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
+                render_board(board_size, BOARD_COMP_ATTACK);
+                printf("You hit the water at %s!\n", pos_temp);
+                // nothing happens
+            }
+
+            break;
         }
-        while (1)
+        else
         {
-            // input coords
-            printf("Enter coordinates to attack (e.g: A2): ");
-            scanf("%3s", pos_temp);
+            printf("ERROR: Invalid Coordinate, please re-enter!\n");
+        }
+    }
+    if (user_hit_counter == MAX_BOATS)
+    {
+        splash_screen();
+        printf("VICTORY: YOU ARE THE WINNER!!\n");
+        exit(0);
+    }
+    printf("\n");
+}
 
-            // converting output to capital
-            if (pos_temp[0] >= 'a' && pos_temp[0] <= 'z') {pos_temp[0] -= 32;}
+void computer_attack(int board_size)
+{
+    char comp_temp[MAX_CHARS]; // [x] [y] [\0]
+    static int hit = 0;
+    int x = 0;
+    int y = 0;
 
-            // checking if valid
-            if ((pos_temp[0] >= 'A' && pos_temp[0] <= (board_size + 'A' - 1)) &&
-            (pos_temp[1] >= '1' && pos_temp[1] <= (board_size + '0')) &&
-            (pos_temp[2] == '\0'))
+    printf("--- Computer hit tracker ---\n");
+
+    while (1)
+    {
+        // Generate random position
+        comp_temp[0] = 'A' + (rand() % board_size);
+        comp_temp[1] = '1' + (rand() % board_size);
+        comp_temp[2] = '\0';
+
+        // convert to int from char
+        int x = comp_temp[0] - 'A';
+        int y = comp_temp[1] - '1';
+
+        // check to see if area used 
+        if (board_user_attack[x][y] == ICON_HIT || board_user_attack[x][y] == ICON_MISS) // hit same part twice: "X" or "~"
+        {
+            //render_board(board_size, BOARD_USER_ATTACK);
+            //printf("The computer is attacking the same position twice at %s!\n", comp_temp);
+            continue;
+        }
+
+        // check if computer hit any of our boats: 'U', 'C'
+        hit = 0;
+        for (int i = 0; i < MAX_BOATS; i++)
+        {
+            if (strcmp(pos_final[i], comp_temp) == 0)
             {
-                // convert to int from char
-                int x = pos_temp[0] - 'A';
-                int y = pos_temp[1] - '1';
-
-                // check to see if area used 
-                if (board[x][y] == ICON_HIT || board[x][y] == ICON_MISS) // hit same part twice: "X" or "~"
+                hit = 1;
+                board_user_attack[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
+                comp_hit_counter++;
+                render_board(board_size, BOARD_USER_ATTACK);
+                printf("The computer destroyed one of your boats at %s!\n\n", comp_temp);
+                if (comp_hit_counter == MAX_BOATS)
                 {
-                    clrscr(100);
-                    render_board(board_size);
-                    printf("You are attacking the same position twice!\n");
-                    continue;
+                    splash_screen();
+                    printf("DEFEAT: YOU HAVE LOST! >:C\n");
+                    exit(0);
                 }
-
-                // check if hit any enemy boats: 'U', 'C'
-                for (int i = 0; i < MAX_BOATS; i++)
-                {
-                    clrscr(100);
-                    if (strcmp(comp_final[i], pos_temp) == 0)
-                    {
-                        hit = 1;
-                        board[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
-                        hit_counter++;
-                        render_board(board_size);
-                        printf("You destroyed an enemy boat!\n");
-                        break;
-                    }
-                }
-
-                // if hit water
-                if (!hit)
-                {
-                    clrscr(100);
-                    board[x][y] = hit ? ICON_HIT : ICON_MISS; // update board
-                    render_board(board_size);
-                    printf("You hit the water!\n");
-                    // nothing happens
-                }
-
-                // reset hit
-                hit = 0;
-
-                break;
+                return;
             }
-            else
-            {
-                printf("ERROR: Invalid Coordinate, please re-enter!\n");
-            }
+        }
+
+        // computer hit water
+        if (!hit)
+        {
+            board_user_attack[x][y] = ICON_MISS; // update board
+            render_board(board_size, BOARD_USER_ATTACK);
+            printf("The computer hit water at %s!\n\n", comp_temp);
+            return;
         }
     }
 }
 
 void computer_coordinates(int board_size)
 {
-    static char pos_temp[MAX_CHARS]; // [x] [y] [\0]
-    srand(time(NULL));
+    char pos_temp[MAX_CHARS]; // [x] [y] [\0]
     for (int l = 0; l < MAX_BOATS; l++)
     {
         // coordinate checking
@@ -246,11 +328,17 @@ void computer_coordinates(int board_size)
             }
             if (!coordinate_conflict)
             {
+                strcpy(comp_final[l], pos_temp);
                 break;
             }
         }
-        strcpy(comp_final[l], pos_temp);
     }
+    // //printf("Final coords: ");
+    // for (int i = 0; i < MAX_BOATS; i++)
+    // {
+    //     printf("%s, ", comp_final[i]);
+    // }
+    // printf("\n");
 }
 
 int input_option(char* message)
@@ -282,11 +370,11 @@ void input_coordinates(int board_size)
     //    pos_final[3 char per boat][5 boats]
     for (int l = 0; l < MAX_BOATS; l++)
     {
+        clrscr(100);
         // coordinate checking
         while (1)
         {
-            clrscr(100);
-            render_board(board_size); // ENABLED so the user can view the board to see valid locations
+            render_board(board_size, BOARD_USER); // ENABLED so the user can view the board to see valid locations
             // ✅ input coords
             printf("Enter your boat coordinates (e.g: A2): ");
             scanf("%3s", pos_temp);
@@ -329,24 +417,43 @@ void input_coordinates(int board_size)
         strcpy(pos_final[l], pos_temp);
         for (int i = 0; (i <= l); i++)
         {
-            board[(int) pos_final[i][0] - 'A'][(int) pos_final[i][1] - '1'] = 'U';
+            board_user[(int) pos_final[i][0] - 'A'][(int) pos_final[i][1] - '1'] = 'U';
         }
     }
     clrscr(100);
 }
 
-void reset_board(int board_size)
+void reset_board(int board_size, int option)
 {
     for (int i = 0; i < board_size; i++)
     {
         for (int j = 0; j < board_size; j++)
         {
-            board[i][j] = '_';
+            if (option == BOARD_COMP)
+            {
+                board_comp[i][j] = '_';
+            }
+            else if (option == BOARD_USER)
+            {
+                board_user[i][j] = '_';
+            }
+            else if (option == BOARD_COMP_ATTACK)
+            {
+                board_comp_attack[i][j] = '_';
+            }
+            else if (option == BOARD_USER_ATTACK)
+            {
+                board_user_attack[i][j] = '_';
+            }
+            else
+            {
+                printf("Error in reset_board.\n");
+            }
         }
     }
 }
 
-void render_board(int board_size)
+void render_board(int board_size, int option)
 {
     //render characters at top
     printf("   ");
@@ -361,7 +468,26 @@ void render_board(int board_size)
         //renders game grid
         for (int j = 0; j < board_size; j++)
         {
-            printf("|_%c_", board[j][i]);
+            if (option == BOARD_COMP)
+            {
+                printf("|_%c_", board_comp[j][i]);
+            }
+            else if (option == BOARD_USER)
+            {
+                printf("|_%c_", board_user[j][i]);
+            }
+            else if (option == BOARD_COMP_ATTACK)
+            {
+                printf("|_%c_", board_comp_attack[j][i]);
+            }
+            else if (option == BOARD_USER_ATTACK)
+            {
+                printf("|_%c_", board_user_attack[j][i]);
+            }
+            else
+            {
+                printf("Error in render_board.\n");
+            }
         }
         printf("|");
     }
@@ -400,6 +526,10 @@ int input_int(char *text, char *error, int clrscr_lines, int error_lines, int af
 
 void clrscr(int i)
 {
+    if (!CLRSCR)
+    {
+        return;
+    }
     for (int n = 0; n < i; n++)
     {
         printf("\n");
