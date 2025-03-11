@@ -171,13 +171,22 @@ void instructions(void)
 
 void player_attack(int board_size)
 {
-    char pos_temp[MAX_CHARS]; // [x] [y] [\0]
+    char pos_temp[5]; // [x] [y] [\0]
     static int hit = 0;
     while (1)
     {
-        // input coords
-        printf("Enter coordinates to attack (e.g: A2): ");
-        scanf("%3s", pos_temp);
+        do
+        {
+            // input coords
+            printf("Enter coordinates to attack (e.g: A2, save, exit): ");
+            scanf("%5s", pos_temp);
+            if (strcmp(pos_temp, "save") == 0 || strcmp(pos_temp, "exit") == 0)
+            {
+                printf("DEBUG: Game saved or exited!\n");
+                SLEEP(2000);
+            }
+        }
+        while (strcmp(pos_temp, "save") == 0 || strcmp(pos_temp, "exit") == 0);
 
         // converting output to capital
         if (pos_temp[0] >= 'a' && pos_temp[0] <= 'z') {pos_temp[0] -= 32;}
@@ -233,7 +242,7 @@ void player_attack(int board_size)
         }
         else
         {
-            printf("ERROR: Invalid Coordinate, please re-enter!\n");
+            printf("ERROR: Invalid coordinate or option, please re-enter!\n");
         }
     }
     if (user_hit_counter == MAX_BOATS)
