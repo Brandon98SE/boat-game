@@ -44,44 +44,25 @@ void player_attack(int board_size);
 void instructions(void);
 void splash_screen(void);
 void computer_attack(int board_size);
+void save_game(void);
 void resume_game(void);
 
-char board_user[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
-char board_comp[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
-char board_comp_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
-char board_user_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
-char pos_final[MAX_BOATS][MAX_CHARS]; // 0
-char comp_final[MAX_BOATS][MAX_CHARS]; // 0
-static int user_hit_counter = 0; // 0
-static int comp_hit_counter = 0; // 0
-int board_size = 0; // 0
-char save_code[999999999];
+// global variables
+char board_user[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
+char board_comp[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
+char board_comp_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
+char board_user_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX];
+char pos_final[MAX_BOATS][MAX_CHARS];
+char comp_final[MAX_BOATS][MAX_CHARS];
+static int user_hit_counter = 0;
+static int comp_hit_counter = 0;
+char save_code[1000];
+int board_size = 0;
 
-
-typedef struct {
-} global_variables;
-
-/*
-void save_game(global_variables *state) 
-{
-    FILE *file = fopen("savegame.txt", "w");
-    if (file == NULL) 
-    {
-        printf("%s", STD_ERR);
-        return;
-    }
-    fprintf(file, "%c %c %c %c %c %c %d %d %d", state->board_user, state->board_comp, state->board_comp_attack, state->board_user_attack, state->pos_final, state->comp_final, state->user_hit_counter, state->comp_hit_counter, state->board_size);
-    fclosef(file);
-    printf("Game saved!\n");
-}
-*/
 
 // main program
 int main(void)
 {
-    // default struct vars
-    //global_variables state = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-
     srand(time(NULL)); // random seed.
     splash_screen();
     SLEEP(1500);
@@ -158,52 +139,9 @@ int main(void)
     }
 }
 
-void save_game()
-{
-    int count = 0;
-
-    save_code[count++] = board_size;
-
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            save_code[count++] = board_user[i][j];
-        }
-    }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            save_code[count++] = board_comp[i][j];
-        }
-    }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            save_code[count++] = board_comp_attack[i][j];
-        }
-    }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            save_code[count++] = board_user_attack[i][j];
-        }
-    }
-    for (int i = 0; i < MAX_BOATS; i++)
-    {
-        for (int j = 0; j < MAX_CHARS; j++)
-        {
-            save_code[count++] = pos_final[i][j];
-        }
-    }
-    printf("Save Code: %s\n", save_code);
-}
-
 void resume_game(void)
 {
+    //input(save_code)
     int count = 0;
 
     printf("Enter your resume code: ");
@@ -278,6 +216,61 @@ user_hit_counter
 comp_hit_counter
 board_size
 */
+
+void save_game()
+{
+    int count = 0;
+
+    save_code[count++] = board_size;
+
+    for (int i = 0; i < board_size; i++)
+    {
+        for (int j = 0; j < board_size; j++)
+        {
+            save_code[count++] = board_user[i][j];
+        }
+    }
+    for (int i = 0; i < board_size; i++)
+    {
+        for (int j = 0; j < board_size; j++)
+        {
+            save_code[count++] = board_comp[i][j];
+        }
+    }
+    for (int i = 0; i < board_size; i++)
+    {
+        for (int j = 0; j < board_size; j++)
+        {
+            save_code[count++] = board_comp_attack[i][j];
+        }
+    }
+    for (int i = 0; i < board_size; i++)
+    {
+        for (int j = 0; j < board_size; j++)
+        {
+            save_code[count++] = board_user_attack[i][j];
+        }
+    }
+    for (int i = 0; i < MAX_BOATS; i++)
+    {
+        for (int j = 0; j < MAX_CHARS; j++)
+        {
+            save_code[count++] = pos_final[i][j];
+        }
+    }
+    printf("Save Code: %s\n", save_code);
+
+    // for (int i = 0; i < board_size; i++)
+    // {
+    //     for (int j = 0; j < board_size; j++)
+    //     {
+    //         save_code[count++] = comp_final[i][j];
+    //     }
+    // }
+    // save_code[count++] = user_hit_counter;
+    // save_code[count++] = comp_hit_counter;
+    // save_code[count++] = '\0';
+}
 
 void splash_screen(void)
 {
