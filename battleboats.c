@@ -44,21 +44,24 @@ void player_attack(int board_size);
 void instructions(void);
 void splash_screen(void);
 void computer_attack(int board_size);
-void save_game(void);
 void resume_game(void);
 
+char board_user[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
+char board_comp[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
+char board_comp_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
+char board_user_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
+char pos_final[MAX_BOATS][MAX_CHARS]; // 0
+char comp_final[MAX_BOATS][MAX_CHARS]; // 0
+static int user_hit_counter = 0; // 0
+static int comp_hit_counter = 0; // 0
+int board_size = 0; // 0
+char save_code[999999999];
+
+
 typedef struct {
-    char board_user[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
-    char board_comp[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
-    char board_comp_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
-    char board_user_attack[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // 0
-    char pos_final[MAX_BOATS][MAX_CHARS]; // 0
-    char comp_final[MAX_BOATS][MAX_CHARS]; // 0
-    static int user_hit_counter = 0; // 0
-    static int comp_hit_counter = 0; // 0
-    int board_size = 0; // 0
 } global_variables;
 
+/*
 void save_game(global_variables *state) 
 {
     FILE *file = fopen("savegame.txt", "w");
@@ -71,12 +74,13 @@ void save_game(global_variables *state)
     fclosef(file);
     printf("Game saved!\n");
 }
+*/
 
 // main program
 int main(void)
 {
     // default struct vars
-    global_variables state = {(char) 0, (char) 0, (char) 0, (char) 0, (char) 0, (char) 0, (int) 0, (int) 0, (int) 0}
+    //global_variables state = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     srand(time(NULL)); // random seed.
     splash_screen();
@@ -196,22 +200,10 @@ void save_game()
         }
     }
     printf("Save Code: %s\n", save_code);
-
-    // for (int i = 0; i < board_size; i++)
-    // {
-    //     for (int j = 0; j < board_size; j++)
-    //     {
-    //         save_code[count++] = comp_final[i][j];
-    //     }
-    // }
-    // save_code[count++] = user_hit_counter;
-    // save_code[count++] = comp_hit_counter;
-    // save_code[count++] = '\0';
 }
 
 void resume_game(void)
 {
-    //input(save_code)
     int count = 0;
 
     printf("Enter your resume code: ");
