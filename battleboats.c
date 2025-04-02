@@ -109,7 +109,7 @@ int main(void)
             clrscr(100);
             printf("--- Player hit tracker ---\n");
             render_board(board_size, BOARD_COMP_ATTACK);
-            while (comp_hit_counter < 5 || user_hit_counter < 5)
+            while (comp_hit_counter < MAX_BOATS && user_hit_counter < MAX_BOATS)
             {
                 player_attack(board_size);
                 SLEEP(3000);
@@ -119,11 +119,47 @@ int main(void)
         else if (menu_selection == 2) // Resume game
         {
             clrscr(100);
-            printf("RESUMING GAME.\n");
-            SLEEP(2000);
-            clrscr(100);
-            printf("GAME RESUMED!\n");
             resume_game();
+            //printf("DEBUG: COMPUTER BOARD.\n");
+
+            // Check to see if game has ended already
+            if (user_hit_counter >= MAX_BOATS || comp_hit_counter >= MAX_BOATS) 
+            {
+                printf("The resumed game has already finished!\n");
+                SLEEP(2000);
+                continue;
+            }
+
+            printf("Resuming game...\n");
+            SLEEP(1500);
+            clrscr(100);
+            printf("--- Player hit tracker ---\n");
+            render_board(board_size, BOARD_COMP_ATTACK);
+            //render_board(board_size, BOARD_USER);
+
+            // run resumed game
+            while (comp_hit_counter < MAX_BOATS && user_hit_counter < MAX_BOATS)
+            {
+                player_attack(board_size);
+                SLEEP(3000);
+                computer_attack(board_size);
+            }
+
+            // Check if win/lose
+            if (user_hit_counter >= MAX_BOATS) 
+            {
+                splash_screen();
+                printf("VICTORY: YOU ARE THE WINNER!!\n");
+            } else if (comp_hit_counter >= MAX_BOATS) 
+            {
+                splash_screen();
+                printf("DEFEAT: YOU HAVE LOST! >:C\n");
+            }
+
+            // end
+            printf("Press any key to exit.\n");
+            getchar();
+            exit(0);
         }
         else if (menu_selection == 3) // Instructions
         {
@@ -141,135 +177,202 @@ int main(void)
 
 void resume_game(void)
 {
-    //input(save_code)
+    char input_code[1000];
+    printf("Paste your resume code here (CTRL+SHIFT+V) and press ENTER: ");
+    scanf("%999s", input_code);
+
     int count = 0;
 
-    printf("Enter your resume code: ");
-    scanf("%1000s", save_code);
+    // board_size
+    if (input_code[count] < '3' || input_code[count] > '9') 
+    {
+        printf("ERROR: Invalid save code, board_size out of range!\n");
+        return;
+    }
+    board_size = input_code[count++] - '0';
 
-    board_size = save_code[count++];
-    printf("board_size: %c\n", board_size);
+    // board_user
+    for (int i = 0; i < board_size; i++) 
+    {
+        for (int j = 0; j < board_size; j++) 
+        {
+            if (input_code[count] == '\0') 
+            {
+                printf("ERROR: Invalid save code, board_user data has been corrupted!\n");
+                return;
+            }
+            board_user[i][j] = input_code[count++];
+        }
+    }
 
-    for (int i = 0; i < board_size; i++)
+    // board_comp
+    for (int i = 0; i < board_size; i++) 
     {
-        for (int j = 0; j < board_size; j++)
+        for (int j = 0; j < board_size; j++) 
         {
-            board_user[i][j] = save_code[count++];
+            if (input_code[count] == '\0') 
+            {
+                printf("ERROR: Invalid save code, board_comp data has been corrupted!\n");
+                return;
+            }
+            board_comp[i][j] = input_code[count++];
         }
     }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            board_comp[i][j] = save_code[count++];
-        }
-    }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            board_comp_attack[i][j] = save_code[count++];
-        }
-    }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            board_user_attack[i][j] = save_code[count++];
-        }
-    }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            pos_final[i][j] = save_code[count++];
-        }
-    }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            comp_final[i][j] = save_code[count++];
-        }
-    }
-    user_hit_counter = save_code[count++];
-    comp_hit_counter = save_code[count++];
 
-    // printf("board_user: %c\n", board_user);
-    // printf("board_comp_attack: %c\n", board_comp_attack);
-    // printf("board_user_attack: %c\n", board_user_attack);
-    // printf("pos_final: %c\n", pos_final);
-    // printf("comp_final: %c\n", comp_final[0][]);
-    // printf("user_hit_counter: %i\n", user_hit_counter);
-    // printf("comp_hit_counter: %i\n", comp_hit_counter);
+    // board_comp_attack
+    for (int i = 0; i < board_size; i++) 
+    {
+        for (int j = 0; j < board_size; j++) 
+        {
+            if (input_code[count] == '\0') 
+            {
+                printf("ERROR: Invalid save code, board_comp_attack data has been corrupted!\n");
+                return;
+            }
+            board_comp_attack[i][j] = input_code[count++];
+        }
+    }
+
+    // board_user_attack
+    for (int i = 0; i < board_size; i++) 
+    {
+        for (int j = 0; j < board_size; j++) 
+        {
+            if (input_code[count] == '\0') 
+            {
+                printf("ERROR: Invalid save code, board_user_attack data has been corrupted!\n");
+                return;
+            }
+            board_user_attack[i][j] = input_code[count++];
+        }
+    }
+
+    // pos_final
+    for (int i = 0; i < MAX_BOATS; i++) 
+    {
+        if (input_code[count] == '\0' || input_code[count + 1] == '\0') 
+        {
+            printf("ERROR: Invalid save code, pos_final data has been corrupted!\n");
+            return;
+        }
+        pos_final[i][0] = input_code[count++];
+        pos_final[i][1] = input_code[count++];
+        pos_final[i][2] = '\0';
+    }
+
+    // comp_final
+    for (int i = 0; i < MAX_BOATS; i++) 
+    {
+        if (input_code[count] == '\0' || input_code[count + 1] == '\0') 
+        {
+            printf("ERROR: Invalid save code, comp_final data has been corrupted!\n");
+            return;
+        }
+        comp_final[i][0] = input_code[count++];
+        comp_final[i][1] = input_code[count++];
+        comp_final[i][2] = '\0';
+    }
+
+    // user_hit_counter
+    if (count + 3 > strlen(input_code)) 
+    {
+        printf("ERROR: Invalid save code, missing hit counters.\n");
+        return;
+    }
+    char user_hits[4] = {input_code[count], input_code[count+1], input_code[count+2], '\0'};
+    user_hit_counter = atoi(user_hits);
+    count += 3;
+
+    // comp_hit_counter
+    char comp_hits[4] = {input_code[count], input_code[count+1], input_code[count+2], '\0'};
+    comp_hit_counter = atoi(comp_hits);
+    count += 3;
+
+    printf("Game resumed!\n");
 }
 
 /*
 Varaiables that need saving:
-board_user
-board_comp
-board_comp_attack
-board_user_attack
-pos_final
-comp_final
-user_hit_counter
-comp_hit_counter
-board_size
++ board_user
++ board_comp
++ board_comp_attack
++ board_user_attack
++ pos_final
++ comp_final
++ user_hit_counter
++ comp_hit_counter
++ board_size
 */
 
 void save_game()
 {
     int count = 0;
 
-    save_code[count++] = board_size;
+    // board_size
+    save_code[count++] = '0' + board_size;
 
-    for (int i = 0; i < board_size; i++)
+    // board_user
+    for (int i = 0; i < board_size; i++) 
     {
-        for (int j = 0; j < board_size; j++)
+        for (int j = 0; j < board_size; j++) 
         {
             save_code[count++] = board_user[i][j];
         }
     }
-    for (int i = 0; i < board_size; i++)
+
+    // board_comp
+    for (int i = 0; i < board_size; i++) 
     {
-        for (int j = 0; j < board_size; j++)
+        for (int j = 0; j < board_size; j++) 
         {
             save_code[count++] = board_comp[i][j];
         }
     }
-    for (int i = 0; i < board_size; i++)
+
+    // board_comp_attack
+    for (int i = 0; i < board_size; i++) 
     {
-        for (int j = 0; j < board_size; j++)
+        for (int j = 0; j < board_size; j++) 
         {
             save_code[count++] = board_comp_attack[i][j];
         }
     }
-    for (int i = 0; i < board_size; i++)
-    {
-        for (int j = 0; j < board_size; j++)
-        {
-            save_code[count++] = board_user_attack[i][j];
-        }
-    }
-    for (int i = 0; i < MAX_BOATS; i++)
-    {
-        for (int j = 0; j < MAX_CHARS; j++)
-        {
-            save_code[count++] = pos_final[i][j];
-        }
-    }
-    printf("Save Code: %s\n", save_code);
 
-    // for (int i = 0; i < board_size; i++)
-    // {
-    //     for (int j = 0; j < board_size; j++)
-    //     {
-    //         save_code[count++] = comp_final[i][j];
-    //     }
-    // }
-    // save_code[count++] = user_hit_counter;
-    // save_code[count++] = comp_hit_counter;
-    // save_code[count++] = '\0';
+    // board_user_attack
+    for (int i = 0; i < board_size; i++) 
+    {
+        for (int j = 0; j < board_size; j++) 
+        {
+            save_code[count++]= board_user_attack[i][j];
+        }
+    }
+
+    // pos_final /wo null terminatror 
+    for (int i = 0; i < MAX_BOATS; i++) 
+    {
+        save_code[count++] = pos_final[i][0];
+        save_code[count++] = pos_final[i][1];
+    }
+
+    // comp_final /wo null terminator
+    for (int i = 0; i < MAX_BOATS; i++) 
+    {
+        save_code[count++] = comp_final[i][0];
+        save_code[count++] = comp_final[i][1];
+    }
+
+    // user_hit_counter str
+    sprintf(&save_code[count], "%03d", user_hit_counter);
+    count += 3;
+
+    // comp_hit_counter str
+    sprintf(&save_code[count], "%03d", comp_hit_counter);
+    count +=3;
+
+    // null terminator
+    save_code[count] = '\0';
+
+    printf("Your save code is: %s\n", save_code);
 }
 
 void splash_screen(void)
@@ -319,13 +422,18 @@ void player_attack(int board_size)
         do
         {
             // input coords
-            printf("Enter coordinates to attack (e.g: A2, save, exit): ");
+            printf("Enter coordinates to attack (e.g: \"A2\", or \"save\" and exit, or \"exit\" without saving.): ");
             scanf("%5s", pos_temp);
-            if (strcmp(pos_temp, "save") == 0 || strcmp(pos_temp, "exit") == 0)
+            if (strcmp(pos_temp, "save") == 0)
             {
                 save_game();
-                printf("DEBUG: Game saved or exited!\n");
-                SLEEP(2000);
+                printf("Saved and exited, please take a copy your save code, thank you for playing battleboats!\n");
+                exit(0);
+            }
+            else if (strcmp(pos_temp, "exit") == 0)
+            {
+                printf("Exited without saving, thank you for playing battleboats!\n");
+                exit(0);
             }
         }
         while (strcmp(pos_temp, "save") == 0 || strcmp(pos_temp, "exit") == 0);
