@@ -15,7 +15,7 @@
 #define MAX_CHARS 3
 #define ICON_HIT 'X'
 #define ICON_MISS '~'
-#define CLRSCR 1
+#define CLRSCR 0
 #define BOARD_COMP_ATTACK 2
 #define BOARD_COMP 1
 #define BOARD_USER 0
@@ -57,6 +57,13 @@ char comp_final[MAX_BOATS][MAX_CHARS];
 static int user_hit_counter = 0;
 static int comp_hit_counter = 0;
 char save_code[1000];
+int user_boat_cells[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // track player boat pos
+int comp_boat_cells[BOARD_SIZE_MAX][BOARD_SIZE_MAX]; // track comp boat pos
+int user_boat_hits[5] = {0}; // track per boat hit in user_boat_cells
+int comp_boat_hits[5] = {0}; // track per boat hit in user_boat_cells
+const int user_boat_sizes[5] = {1, 1, 2, 2, 3}; // 2x destrpyser, 2x other thing, 1x carrier
+const int comp_boat_sizes[5] = {1, 1, 2, 2, 3}; // 2x destrpyser, 2x other thing, 1x carrier
+
 int board_size = 0;
 
 
@@ -630,18 +637,23 @@ int input_option(char* message)
 
 void input_coordinates(int board_size)
 {
-    static char pos_temp[MAX_CHARS]; // [x] [y] [\0]
+    char pos_temp[MAX_CHARS]; // [x] [y] [\0]
+    char orientation;
+    // input boats in order of size, 5 boats with 3 variatiosn.
+    int boat_order[5] = {1, 1, 2, 2, 3};
     // storing.
     //    pos_final[3 char per boat][5 boats]
     for (int l = 0; l < MAX_BOATS; l++)
     {
+        // size of current boat
+        int size = boat_order[l];
         clrscr(100);
         // coordinate checking
         while (1)
         {
             render_board(board_size, BOARD_USER); // ENABLED so the user can view the board to see valid locations
             // ✅ input coords
-            printf("Enter your boat coordinates (e.g: A2): ");
+            printf("Enter boat %d (Size %d), coordinates (e.g: A2): ", l+1, size);
             scanf("%3s", pos_temp);
 
             // ✅ convert to upper
@@ -650,11 +662,36 @@ void input_coordinates(int board_size)
                 pos_temp[0] -= 32;
             }
 
-            // ✅ check if valid
-            if ((pos_temp[0] >= 'A' && pos_temp[0] <= (board_size + 'A' - 1)) &&
-            (pos_temp[1] >= '1' && pos_temp[1] <= (board_size + '0')) &&
-            (pos_temp[2] == '\0'))
+            if (!pos_valid(pos_temp, board_size))
             {
+                printf("ERROR: Invalid Coordinates, please re-enter!\n");
+                continue;
+            }
+
+            if (size > 1)
+            {
+                printf("Enter boat orientation: ");
+                scanf("%c", &orientation);
+                // ✅ convert to upper
+                if (orientation[0] >= 'a' && orientation[0] <= 'z')
+                {
+                    orientation[0] -= 32;
+                }
+                if (orientation != 'H' && orientation != 'V')
+                {
+                    printf("ERROR: Invalid Orientation, please re-enter!\n");
+                    continue;
+                }
+            }
+
+            // boat pos
+            char cells[3][3];
+            if (!boat_cells(pos_temp, orientation, size, board_size, cells))
+            {
+                printf("ERROR: Boat out of bounds, please re-enter!\n");
+                continue;
+            }
+
                 // ❌
                 int coordinate_conflict = 0;
                 for (int i = 0; i < l; i++)
@@ -672,11 +709,6 @@ void input_coordinates(int board_size)
                 clrscr(100);
                 printf("ERROR: Coordinate already used, please re-enter!\n");
             }
-            else
-            {
-                clrscr(100);
-                printf("ERROR: Invalid Coordinate, please re-enter!\n");
-            }
         }
         // pos_final pos_temp as used_coordinates[MAX_BOATS] (5) = A2, A3, B5, A5, D3. compare them with input, if == INVALID.
         strcpy(pos_final[l], pos_temp);
@@ -687,6 +719,27 @@ void input_coordinates(int board_size)
     }
     clrscr(100);
 }
+
+bool boat_cells(char *start_coords, char orientation, int size, int board_size, char cells[3])
+{
+    int x_coord = start_coords[0] - 'A';
+    int y_coord = start_coords[1] - '1';
+
+    for (int i = 0; i < size; i++)
+    {
+        int x = x_coord + orientation == 'V' ? i : 0); // H add to right, V add to bottom
+        int y = y_coord + orientation == 'H' ? i : 0); // H add to right, V add to bottom
+    }
+}
+
+int pos_valid(char *pos, int board_size)
+{
+    // ✅ check if valid
+    return (pos[0] >= 'A' && pos[0] <= (board_size + 'A' - 1)) &&
+            (pos[1] >= '1' && pos[1] <= (board_size + '0')) &&
+            (pos[2] == '\0');
+}
+
 
 void reset_board(int board_size, int option)
 {
